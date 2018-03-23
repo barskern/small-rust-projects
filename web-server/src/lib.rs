@@ -3,26 +3,29 @@ use std::io::Read;
 use std::path::Path;
 
 mod utils;
-
+mod http;
 mod router;
+
 use router::Router;
+use http::HTTPRequest;
 
 const MAX_REQUEST_SIZE: usize = 512;
 
 pub fn run(port: usize) {
-  let listener = TcpListener::bind(format!("localhost:{}", port)).unwrap();
   let dir_path = Path::new("./html/");
   let router = Router::new(dir_path);
 
-  println!("Running webserver at port {}", port);
+  let listener = TcpListener::bind(format!("localhost:{}", port)).unwrap();
+  println!("Listening for connections at port {}", port);
   for stream in listener.incoming() {
     match stream {
       Ok(mut stream) => {
-        let mut buffer = [0; MAX_REQUEST_SIZE];
-        stream.read(&mut buffer).unwrap();
+        let mut buffer: [u8; MAX_REQUEST_SIZE] = [0; MAX_REQUEST_SIZE];
+        let n_bytes_read = stream.read(&mut buffer).unwrap();
+        let request_str: &str = std::str::from_utf8(&buffer[..n_bytes_read]).unwrap();
 
-        let request = String::from_utf8_lossy(&buffer);
-        router.handle_request(&request);
+        let request = HTTPRequest::from(request_str);
+        router.handle_request(request);
       }
       Err(e) => {
         println!("Connection failed: {}", e);
