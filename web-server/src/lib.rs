@@ -1,9 +1,11 @@
 use std::net::TcpListener;
 use std::io::Read;
+use std::path::Path;
+
+mod utils;
 
 mod router;
 use router::Router;
-use std::path::Path;
 
 const MAX_REQUEST_SIZE: usize = 512;
 

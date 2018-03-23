@@ -1,7 +1,8 @@
 use std::collections::HashMap;
-use std::fs;
 use std::fs::{DirEntry, File};
 use std::path::{Path, PathBuf};
+
+use utils::visit_dir;
 
 pub struct Router {
   paths: HashMap<String, File>,
@@ -11,25 +12,17 @@ impl Router {
   pub fn new(dir_path: &Path) -> Router {
     let mut paths: HashMap<String, File> = HashMap::new();
 
-    visit_dir(
-      dir_path,
-      &mut |entry, dir_depth| {
-        let file_path = entry.path();
-        let file = File::open(&file_path).unwrap();
-        let uri = file_path
-          .iter()
-          .rev()
-          .skip(1)
-          .take(dir_depth)
-          .collect::<Vec<_>>()
-          .iter()
-          .rev()
-          .collect::<PathBuf>();
+    visit_dir(dir_path, &mut |entry: DirEntry, dir_depth: usize| {
+      let file_path = entry.path();
+      let file = File::open(&file_path).unwrap();
 
-        paths.insert(String::from(uri.to_str().unwrap()), file);
-      },
-      0,
-    );
+      let uri = format!(
+        "/{}",
+        turn_path_into_uri(&file_path, dir_depth).to_str().unwrap()
+      );
+
+      paths.insert(uri, file);
+    });
 
     paths.iter().for_each(|(k, v)| println!("{:?}: {:?}", k, v));
 
@@ -41,40 +34,17 @@ impl Router {
   }
 }
 
-fn visit_dir2<F>(dir_path: &Path, f: &mut F, dir_depth: usize)
-where
-  F: FnMut(DirEntry, usize),
-{
-  for dir_entry in fs::read_dir(dir_path).expect("Wasn't able to read the html directory") {
-    if let Some(dir_entry) = dir_entry.ok() {
-      if fs::metadata(dir_entry.path()).unwrap().is_dir() {
-        visit_dir(dir_entry.path().as_path(), f, dir_depth + 1)
-      } else {
-        f(dir_entry, dir_depth)
-      }
-    }
-  }
-}
-
-fn visit_dir<'a, F>(dir_path: &'a Path, f: &mut F, dir_depth: usize)
-where
-  F: FnMut(DirEntry, usize),
-{
-  let (dirs, files): (Vec<&'a Path>, Vec<&'a Path>) = fs::read_dir(dir_path)
-    .expect(&format!(
-      "Wasn't able to read directory at path: {:?}",
-      dir_path
-    ))
-    .into_iter()
-    .map(|dir_entry| dir_entry.unwrap().path().as_path())
-    .partition(|path| fs::metadata(path).unwrap().is_dir());
-
-  // dirs
-  //   .iter()
-  //   .for_each(|path| visit_dir(path, f, dir_depth + 1));
-  //
-  // println!("dirs: {:?}", dirs);
-  // println!("files: {:?}", files);
+/// Turns a possible global file path into an uri path
+fn turn_path_into_uri(path: &Path, dir_depth: usize) -> PathBuf {
+  path
+    .iter()
+    .rev()
+    .skip(1)
+    .take(dir_depth)
+    .collect::<Vec<_>>()
+    .iter()
+    .rev()
+    .collect::<PathBuf>()
 }
 
 fn get_path(request: &str) -> Option<&str> {
@@ -95,14 +65,25 @@ mod tests {
   use super::*;
 
   #[test]
-  fn test_good_get_path() {
+  fn good_get_path() {
     let path = get_path("GET /home/aabbcc HTTP1.1\n\r\n\r").unwrap();
     assert_eq!(path, "/home/aabbcc");
   }
 
   #[test]
   #[should_panic]
-  fn test_bad_get_path() {
+  fn bad_get_path() {
     get_path("GET HTTP1.1").unwrap();
+  }
+
+  #[test]
+  fn good_turn_path_into_uri() {
+    use std::path::PathBuf;
+    let path = PathBuf::from(r"./html/about/us/index.html");
+    let dir_depth = 2;
+    let path_buf = turn_path_into_uri(&path, dir_depth);
+    let path_str = path_buf.to_str().unwrap();
+
+    assert_eq!(path_str, "about/us")
   }
 }
