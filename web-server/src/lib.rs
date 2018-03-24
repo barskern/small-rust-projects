@@ -7,7 +7,6 @@ mod http;
 mod router;
 
 use router::Router;
-use http::HTTPRequest;
 
 const MAX_REQUEST_SIZE: usize = 512;
 
@@ -24,7 +23,8 @@ pub fn run(port: usize) {
         let n_bytes_read = stream.read(&mut buffer).unwrap();
         let request_str: &str = std::str::from_utf8(&buffer[..n_bytes_read]).unwrap();
 
-        let request = HTTPRequest::from(request_str);
+        let request = http::Request::from_str(request_str).unwrap();
+        println!("{:#?}", request);
         router.handle_request(request);
       }
       Err(e) => {

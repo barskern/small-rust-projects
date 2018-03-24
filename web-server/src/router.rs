@@ -3,7 +3,7 @@ use std::fs::{DirEntry, File};
 use std::path::{Path, PathBuf};
 
 use utils::visit_dir;
-use http::HTTPRequest;
+use http;
 
 pub struct Router {
   paths: HashMap<String, File>,
@@ -28,7 +28,7 @@ impl Router {
     Router { paths }
   }
 
-  pub fn handle_request(&self, request: HTTPRequest) {
+  pub fn handle_request(&self, request: http::Request) {
     // println!("{:?}", request);
   }
 }

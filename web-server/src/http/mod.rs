@@ -1,3 +1,3 @@
 pub mod request;
 
-pub use self::request::HTTPRequest;
+pub use self::request::Request;
