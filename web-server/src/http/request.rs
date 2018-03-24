@@ -35,6 +35,7 @@ impl<'a> Request<'a> {
 #[derive(Debug)]
 pub enum Methods {
   GET,
+  HEAD,
   PUT,
   POST,
 }
@@ -43,6 +44,7 @@ impl Methods {
   fn from_str(method_str: &str) -> Result<Self, String> {
     match method_str {
       "GET" => Ok(Methods::GET),
+      "HEAD" => Ok(Methods::HEAD),
       "PUT" => Ok(Methods::PUT),
       "POST" => Ok(Methods::POST),
       _ => Err(format!(
