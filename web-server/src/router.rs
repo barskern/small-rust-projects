@@ -70,9 +70,8 @@ mod tests {
   }
 
   #[test]
-  #[should_panic]
   fn bad_get_path() {
-    get_path("GET HTTP1.1").unwrap();
+    assert_eq!(get_path("GET HTTP1.1"), None);
   }
 
   #[test]
