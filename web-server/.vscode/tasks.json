@@ -10,7 +10,6 @@
       "args": [
         "build"
       ],
-      "problemMatcher": "$rustc",
       "group": {
         "kind": "build",
         "isDefault": true
@@ -20,7 +19,6 @@
       "type": "shell",
       "label": "cargo test",
       "command": "cargo",
-      "problemMatcher": "$rustc",
       "args": [
         "watch",
         "-x",
