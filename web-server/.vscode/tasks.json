@@ -24,8 +24,6 @@
       "args": [
         "watch",
         "-x",
-        "check",
-        "-x",
         "test"
       ],
       "group": {
