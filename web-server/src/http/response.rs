@@ -1,56 +1,19 @@
-use super::message::{Message, MessageBuilder};
+/* use std::collections::HashMap;
+use std::str::FromStr;
 
 pub struct Response<'a> {
   version: &'a str,
-  status_code: StatusCode,
   reason_phrase: &'a str,
-  message: Message<'a>,
 }
 
-pub struct ResponseBuilder<'a> {
-  __version: &'a str,
-  __status_code: StatusCode,
-  __reason_phrase: &'a str,
-  __message_builder: MessageBuilder<'a>,
-}
+impl<'a> FromStr for Response<'a> {
+  type Err = String;
 
-impl<'a> ResponseBuilder<'a> {
-  pub fn new(status_code: StatusCode, body: &'a str) -> Self {
-    ResponseBuilder {
-      __status_code: status_code,
-      __reason_phrase: "",
-      __version: "HTTP/1.1",
-      __message_builder: MessageBuilder::new().body(body),
-    }
-  }
-
-  pub fn reason(mut self, reason_phrase: &'a str) -> Self {
-    self.__reason_phrase = reason_phrase;
-    self
-  }
-
-  pub fn status(mut self, status_code: StatusCode) -> Self {
-    self.__status_code = status_code;
-    self
-  }
-
-  pub fn version(mut self, version: &'a str) -> Self {
-    self.__version = version;
-    self
-  }
-
-  pub fn add_header(mut self, name: &'a str, value: &'a str) -> Self {
-    self.__message_builder = self.__message_builder.add_header(name, value);
-    self
-  }
-
-  pub fn build(self) -> Response<'a> {
-    Response {
-      version: self.__version,
-      status_code: self.__status_code,
-      reason_phrase: self.__reason_phrase,
-      message: self.__message_builder.build(),
-    }
+  fn from_str(s: &str) -> Result<Self, Self::Err> {
+    Err(String::from(format!(
+      "Failed to create http-response from: {}",
+      s
+    )))
   }
 }
 
@@ -96,3 +59,4 @@ pub enum StatusCode {
   GatewayTimeout = 504,
   HTTPVersionnotsupported = 505,
 }
+ */

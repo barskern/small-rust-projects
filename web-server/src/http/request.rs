@@ -1,68 +1,99 @@
-use super::message::{Message, MessageBuilder};
+use super::content::Content;
+use std::collections::HashMap;
+use std::str::FromStr;
 
-#[derive(Debug)]
-pub struct Request<'a> {
-  method: Methods,
+#[derive(Debug, PartialEq)]
+pub struct RequestContent<'a> {
   uri: &'a str,
   version: &'a str,
-  message: Message<'a>,
+  content: Content<'a>,
 }
 
-impl<'a> Request<'a> {
-  pub fn from_str(request_str: &'a str) -> Option<Self> {
-    let mut lines = request_str.lines();
+impl<'a> FromStr for RequestContent<'a> {
+  type Err = String;
 
-    let mut request_line = lines.next()?.split(' ');
-
-    let method = {
-      let method_str = request_line.next()?;
-      if let Ok(m) = Methods::from_str(method_str) {
-        m
-      } else {
-        return None;
-      }
-    };
-    let uri = request_line.next()?;
-    let version = request_line.next()?;
-
-    let message = {
-      let newline_char_len = 2;
-      let remaining_bytes = lines.fold(0, |acc, line| acc + line.len() + newline_char_len);
-      if let Some(m) = Message::from_str(&request_str[request_str.len() - remaining_bytes..]) {
-        m
-      } else {
-        MessageBuilder::new().build()
-      }
-    };
-
-    Some(Request {
-      method,
-      uri,
-      version,
-      message,
-    })
+  fn from_str(s: &str) -> Result<Self, Self::Err> {
+    Err(String::from(format!(
+      "Failed to create http-request-content from: {}",
+      s
+    )))
   }
 }
 
-#[derive(Debug)]
-pub enum Methods {
-  GET,
-  HEAD,
-  PUT,
-  POST,
+#[derive(Debug, PartialEq)]
+pub enum Request<'a> {
+  GET(RequestContent<'a>),
+  HEAD(RequestContent<'a>),
+  PUT(RequestContent<'a>),
+  POST(RequestContent<'a>),
 }
 
-impl Methods {
-  fn from_str(method_str: &str) -> Result<Self, String> {
-    match method_str {
-      "GET" => Ok(Methods::GET),
-      "HEAD" => Ok(Methods::HEAD),
-      "PUT" => Ok(Methods::PUT),
-      "POST" => Ok(Methods::POST),
-      _ => Err(format!(
-        "Error: Couldn't process the method: {}",
-        method_str
-      )),
+impl<'a> FromStr for Request<'a> {
+  type Err = String;
+
+  fn from_str(s: &str) -> Result<Self, Self::Err> {
+    let mut lines = s.lines();
+
+    if let Some(request_line) = lines.next() {
+      println!("{}", request_line);
+      let mut request_line_iter = request_line.split_whitespace();
+
+      if let (Some(method), Some(uri), Some(version)) = (
+        request_line_iter.next(),
+        request_line_iter.next(),
+        request_line_iter.next()
+      ) {
+        return Ok(Request::GET(RequestContent {
+          uri: uri,
+          version: version,
+          content: Content::new(""),
+        }));
+      }
     }
+    Err(String::from(format!(
+      "Failed to create http-request from: {}",
+      s
+    )))
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn request_from_str_request_line() {
+    let request = "GET / HTTP/1.1\r\n\r\n".parse::<Request>().unwrap();
+
+    let expected_request = Request::GET(RequestContent {
+      uri: "/",
+      version: "HTTP/1.1",
+      content: Content::new(""),
+    });
+
+    assert_eq!(request, expected_request);
+  }
+
+  #[test]
+  fn request_from_str_possible_uris() {
+    let different_uris = vec![
+      "*",
+      "http://barskern.github.io/index.html",
+      "/about/me/index.html ",
+    ];
+
+    different_uris.into_iter().for_each(|uri| {
+      let request = format!("GET {} HTTP/1.1\r\n\r\n", uri)
+        .parse::<Request>()
+        .unwrap();
+
+      let expected_request = Request::GET(RequestContent {
+        uri,
+        version: "HTTP/1.1",
+        content: Content::new(""),
+      });
+
+      assert_eq!(request, expected_request);
+    })
   }
 }

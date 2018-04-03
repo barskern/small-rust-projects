@@ -23,9 +23,9 @@ pub fn run(port: usize) {
         let n_bytes_read = stream.read(&mut buffer).unwrap();
         let request_str: &str = std::str::from_utf8(&buffer[..n_bytes_read]).unwrap();
 
-        let request = http::Request::from_str(request_str).unwrap();
+        /* let request: http::Request = request_str.parse().unwrap();
         println!("{:#?}", request);
-        router.handle_request(request);
+        router.handle_request(request); */
       }
       Err(e) => {
         println!("Connection failed: {}", e);
