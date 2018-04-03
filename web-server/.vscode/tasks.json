@@ -21,6 +21,9 @@
       "command": "cargo",
       "args": [
         "watch",
+        "-q",
+        "-x",
+        "'build -q'",
         "-x",
         "test"
       ],
