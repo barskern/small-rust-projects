@@ -1,3 +1,5 @@
+#![feature(try_from)]
+
 use std::net::TcpListener;
 use std::io::Read;
 use std::path::Path;
@@ -8,7 +10,7 @@ mod router;
 
 use router::Router;
 
-const MAX_REQUEST_SIZE: usize = 512;
+const MAX_REQUEST_SIZE: usize = 1024;
 
 pub fn run(port: usize) {
   let dir_path = Path::new("./html/");
@@ -19,9 +21,15 @@ pub fn run(port: usize) {
   for stream in listener.incoming() {
     match stream {
       Ok(mut stream) => {
-        let mut buffer: [u8; MAX_REQUEST_SIZE] = [0; MAX_REQUEST_SIZE];
-        let n_bytes_read = stream.read(&mut buffer).unwrap();
-        let request_str: &str = std::str::from_utf8(&buffer[..n_bytes_read]).unwrap();
+        let mut request_str = String::with_capacity(MAX_REQUEST_SIZE);
+        println!("Initialized request str");
+
+        let _n_bytes_read = stream
+          .take(MAX_REQUEST_SIZE as u64)
+          .read_to_string(&mut request_str)
+          .unwrap();
+
+        println!("{}", request_str);
 
         /* let request: http::Request = request_str.parse().unwrap();
         println!("{:#?}", request);

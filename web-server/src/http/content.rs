@@ -1,14 +1,13 @@
 use std::collections::HashMap;
-use std::default::Default;
 
 #[derive(Debug, PartialEq)]
-pub struct Content<'a> {
-  headers: HashMap<&'a str, &'a str>,
-  body: &'a str,
+pub struct Content {
+  headers: HashMap<String, String>,
+  body: String,
 }
 
-impl<'a> Content<'a> {
-  pub fn new(body: &'a str) -> Self {
+impl Content {
+  pub fn new(body: String) -> Self {
     Content {
       headers: HashMap::new(),
       body,
