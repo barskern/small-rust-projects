@@ -48,40 +48,40 @@ pub enum ReadStreamError {
 }
 
 impl fmt::Display for ReadStreamError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            ReadStreamError::Io(ref err) => write!(f, "IO error: {}", err),
-            ReadStreamError::Parse(ref err) => write!(f, "Parse error: {}", err),
-        }
+  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    match *self {
+      ReadStreamError::Io(ref err) => write!(f, "IO error: {}", err),
+      ReadStreamError::Parse(ref err) => write!(f, "Parse error: {}", err),
     }
+  }
 }
 
 impl error::Error for ReadStreamError {
-    fn description(&self) -> &str {
-        match *self {
-            ReadStreamError::Io(ref err) => err.description(),
-            ReadStreamError::Parse(ref err) => err.description(),
-        }
+  fn description(&self) -> &str {
+    match *self {
+      ReadStreamError::Io(ref err) => err.description(),
+      ReadStreamError::Parse(ref err) => err.description(),
     }
+  }
 
-    fn cause(&self) -> Option<&error::Error> {
-        match *self {
-            ReadStreamError::Io(ref err) => Some(err),
-            ReadStreamError::Parse(ref err) => Some(err),
-        }
+  fn cause(&self) -> Option<&error::Error> {
+    match *self {
+      ReadStreamError::Io(ref err) => Some(err),
+      ReadStreamError::Parse(ref err) => Some(err),
     }
+  }
 }
 
 impl From<io::Error> for ReadStreamError {
-    fn from(err: io::Error) -> ReadStreamError {
-        ReadStreamError::Io(err)
-    }
+  fn from(err: io::Error) -> ReadStreamError {
+    ReadStreamError::Io(err)
+  }
 }
 
 impl From<string::FromUtf8Error> for ReadStreamError {
-    fn from(err: string::FromUtf8Error) -> ReadStreamError {
-        ReadStreamError::Parse(err)
-    }
+  fn from(err: string::FromUtf8Error) -> ReadStreamError {
+    ReadStreamError::Parse(err)
+  }
 }
 
 /// Reads request from stream and returns a string which contains the request in UTF8
