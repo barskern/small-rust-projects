@@ -1,7 +1,6 @@
 use super::content::Content;
 use std::convert::TryFrom;
 use std::str::FromStr;
-use std;
 
 #[derive(Debug, PartialEq)]
 pub struct Request {
@@ -24,6 +23,10 @@ impl TryFrom<String> for Request {
       .take(1)
       .flat_map(|request_line| request_line.split_whitespace())
       .collect::<Vec<_>>();
+
+    if request_line.len() < 3 {
+      return Err(ParseRequestError::invalid());
+    }
 
     let method = RequestMethod::from_str(request_line[0])?;
     let uri = request_line[1];

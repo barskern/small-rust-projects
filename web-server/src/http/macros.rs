@@ -20,14 +20,14 @@ macro_rules! parse_from_string_error {
       }
     }
 
-    impl std::fmt::Display for $error_name {
-      fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        use std::error::Error;
+    impl ::std::fmt::Display for $error_name {
+      fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        use ::std::error::Error;
         self.description().fmt(f)
       }
     }
 
-    impl std::error::Error for $error_name {
+    impl ::std::error::Error for $error_name {
       fn description(&self) -> &str {
         match self.kind {
           Some(_) => concat!("invalid ", stringify!($type_name), " literal"),
