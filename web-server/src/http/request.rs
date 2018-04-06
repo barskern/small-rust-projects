@@ -15,11 +15,30 @@ impl TryFrom<String> for Request {
   type Error = ParseRequestError;
 
   fn try_from(s: String) -> Result<Self, Self::Error> {
-    Err(ParseRequestError::invalid())
+    if s.len() == 0 {
+      return Err(ParseRequestError::empty());
+    }
+    let lines = s.lines();
+
+    let request_line = lines
+      .take(1)
+      .flat_map(|request_line| request_line.split_whitespace())
+      .collect::<Vec<_>>();
+
+    let method = RequestMethod::from_str(request_line[0])?;
+    let uri = request_line[1];
+    let version = request_line[2];
+
+    Ok(Request {
+      method,
+      uri: uri.to_string(),
+      version: version.to_string(),
+      content: Content::new("".to_string()),
+    })
   }
 }
 
-parse_from_string_error!(ParseRequestError, Request);
+parse_from_string_error!(Request, ParseRequestError, ParseRequestMethodError);
 
 #[derive(Debug, PartialEq)]
 pub enum RequestMethod {
@@ -43,7 +62,7 @@ impl FromStr for RequestMethod {
   }
 }
 
-parse_from_string_error!(ParseRequestMethodError, RequestMethod);
+parse_from_string_error!(RequestMethod, ParseRequestMethodError);
 
 #[cfg(test)]
 mod tests {
