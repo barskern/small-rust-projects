@@ -1,35 +1,42 @@
 use std::collections::HashMap;
 use std::fs::{DirEntry, File};
 use std::path::{Path, PathBuf};
+use std::io::Read;
 
 use utils::visit_dir;
 use http;
 
 pub struct Router {
-  paths: HashMap<String, File>,
+  paths: HashMap<String, String>,
 }
 
 impl Router {
   pub fn new(dir_path: &Path) -> Router {
-    let mut paths: HashMap<String, File> = HashMap::new();
+    let mut paths: HashMap<String, String> = HashMap::new();
 
     visit_dir(dir_path, &mut |entry: DirEntry, dir_depth: usize| {
       let file_path = entry.path();
-      let file = File::open(&file_path).unwrap();
+      let mut file = File::open(&file_path).unwrap();
+
+      let mut file_contents = String::new();
+      file.read_to_string(&mut file_contents);
 
       let uri = format!(
         "/{}",
         turn_path_into_uri(&file_path, dir_depth).to_str().unwrap()
       );
 
-      paths.insert(uri, file);
+      paths.insert(uri, file_contents);
     });
-    // paths.iter().for_each(|(k, v)| println!("{:?}: {:?}", k, v));
     Router { paths }
   }
 
-  pub fn handle_request(&self, request: http::Request) {
-    // println!("{:?}", request);
+  pub fn handle_request(&self, request: http::Request) -> http::Response {
+    if let Some(res_string) = self.paths.get(request.uri()) {
+      http::Response::new(res_string.clone())
+    } else {
+      http::Response::not_found()
+    }
   }
 }
 

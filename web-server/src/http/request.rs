@@ -15,8 +15,8 @@ pub struct Request {
 }
 
 impl Request {
-  pub fn method(&self) -> &RequestMethod {
-    &self.method
+  pub fn method(&self) -> RequestMethod {
+    self.method
   }
   pub fn uri(&self) -> &str {
     &self.uri
@@ -27,8 +27,8 @@ impl Request {
   pub fn body(&self) -> &str {
     self.content.body()
   }
-  pub fn header(&self, header: &str) -> Option<&str> {
-    self.content.header(header)
+  pub fn has_header(&self, header: &str) -> Option<&str> {
+    self.content.has_header(header)
   }
 }
 
@@ -73,7 +73,7 @@ impl TryFrom<String> for Request {
   }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum RequestMethod {
   GET,
   HEAD,
