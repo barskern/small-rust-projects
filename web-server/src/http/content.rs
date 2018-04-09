@@ -18,6 +18,15 @@ impl Content {
   }
 }
 
+impl Content {
+  pub fn body(&self) -> &str {
+    &self.body
+  }
+  pub fn header(&self, header: &str) -> Option<&str> {
+    self.headers.get(header).map(|s| s.as_str())
+  }
+}
+
 impl TryFrom<String> for Content {
   type Error = ParseContentError;
 

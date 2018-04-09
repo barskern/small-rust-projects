@@ -14,6 +14,24 @@ pub struct Request {
   content: Content,
 }
 
+impl Request {
+  pub fn method(&self) -> &RequestMethod {
+    &self.method
+  }
+  pub fn uri(&self) -> &str {
+    &self.uri
+  }
+  pub fn version(&self) -> &str {
+    &self.version
+  }
+  pub fn body(&self) -> &str {
+    self.content.body()
+  }
+  pub fn header(&self, header: &str) -> Option<&str> {
+    self.content.header(header)
+  }
+}
+
 impl TryFrom<String> for Request {
   type Error = ParseRequestError;
 
