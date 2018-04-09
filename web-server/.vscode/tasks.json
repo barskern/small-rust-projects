@@ -23,8 +23,6 @@
         "watch",
         "-q",
         "-x",
-        "'build -q'",
-        "-x",
         "test"
       ],
       "group": {
