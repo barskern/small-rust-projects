@@ -1,4 +1,4 @@
-#![feature(try_from)]
+#![feature(try_from, try_trait, iterator_try_fold)]
 
 use std::convert::TryFrom;
 use std::net::TcpListener;

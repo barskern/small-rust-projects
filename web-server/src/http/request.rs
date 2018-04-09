@@ -1,6 +1,10 @@
-use super::content::Content;
 use std::convert::TryFrom;
 use std::str::FromStr;
+pub use super::errors::{
+  ParseRequestError, 
+  ParseRequestMethodError
+};
+use super::content::Content;
 
 #[derive(Debug, PartialEq)]
 pub struct Request {
@@ -13,35 +17,43 @@ pub struct Request {
 impl TryFrom<String> for Request {
   type Error = ParseRequestError;
 
-  fn try_from(s: String) -> Result<Self, Self::Error> {
+  fn try_from(mut s: String) -> Result<Self, Self::Error> {
     if s.len() == 0 {
       return Err(ParseRequestError::empty());
     }
-    let lines = s.lines();
 
-    let request_line = lines
-      .take(1)
-      .flat_map(|request_line| request_line.split_whitespace())
-      .collect::<Vec<_>>();
+    let content_str = {    
+      let newline_pos = s
+        .find("\r\n")
+        .map(|pos| pos + 2)
+        .or(s
+          .find('\n')
+          .map(|pos| pos + 1)
+        )?;
+      s.split_off(newline_pos)
+    };
+
+    let request_line: Vec<&str> = s
+      .split_whitespace()
+      .collect();
 
     if request_line.len() < 3 {
       return Err(ParseRequestError::invalid());
     }
 
     let method = RequestMethod::from_str(request_line[0])?;
-    let uri = request_line[1];
-    let version = request_line[2];
+    let uri = request_line[1].to_string();
+    let version = request_line[2].to_string();
+    let content = Content::try_from(content_str)?;
 
     Ok(Request {
       method,
-      uri: uri.to_string(),
-      version: version.to_string(),
-      content: Content::new("".to_string()),
+      uri,
+      version,
+      content,
     })
   }
 }
-
-parse_from_string_error!(Request, ParseRequestError, ParseRequestMethodError);
 
 #[derive(Debug, PartialEq)]
 pub enum RequestMethod {
@@ -65,8 +77,6 @@ impl FromStr for RequestMethod {
   }
 }
 
-parse_from_string_error!(RequestMethod, ParseRequestMethodError);
-
 #[cfg(test)]
 mod tests {
   use super::*;
@@ -82,7 +92,7 @@ mod tests {
       method: RequestMethod::GET,
       uri: "/".to_string(),
       version: "HTTP/1.1".to_string(),
-      content: Content::new(String::new()),
+      content: Content::new("".to_string()),
     };
 
     assert_eq!(expected_request, request);
@@ -104,12 +114,5 @@ mod tests {
       };
       assert_eq!(expected_method, method);
     }
-  }
-
-  #[test]
-  #[should_panic]
-  fn method_from_string_bad() {
-    let method_str = "WRONG";
-    RequestMethod::from_str(method_str).unwrap();
   }
 }
