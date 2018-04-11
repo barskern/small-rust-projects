@@ -94,8 +94,7 @@ impl Display for Request {
   }
 }
 
-/// A small enum which encodes the type of
-/// http-request.
+/// A small enum which encodes the type of http-request.
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum RequestMethod {
   GET,

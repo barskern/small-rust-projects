@@ -62,6 +62,13 @@ macro_rules! parse_from_string_error {
   }
 }
 
+/// General error-types
+parse_from_string_error!(Http, ParseHttpError, ParseRequestError);
+
+/// Error for Content-type
+parse_from_string_error!(Content, ParseContentError);
+
+/// Error for Request-type
 parse_from_string_error!(
   Request,
   ParseRequestError,
@@ -71,6 +78,12 @@ parse_from_string_error!(
 
 parse_from_string_error!(RequestMethod, ParseRequestMethodError);
 
-parse_from_string_error!(Content, ParseContentError);
+/// Error for Response-type
+parse_from_string_error!(
+  Response,
+  ParseResponseError,
+  ParseStatusCodeError,
+  ParseContentError
+);
 
-parse_from_string_error!(Http, ParseHttpError, ParseRequestError);
+parse_from_string_error!(StatusCode, ParseStatusCodeError);

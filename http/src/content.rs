@@ -1,9 +1,8 @@
 use std::{mem, collections::HashMap, convert::TryFrom, default::Default, fmt::{self, Display}};
 use super::errors::ParseContentError;
 
-/// A struct which has controll over the
-/// content of a http message. This includes
-/// headers and body.
+/// A struct which has contains the content of a
+/// http message. This includes headers and body.
 #[derive(Debug, PartialEq)]
 pub struct Content {
   headers: HashMap<String, String>,
@@ -85,12 +84,14 @@ impl TryFrom<String> for Content {
   }
 }
 
-/// Trait given to types that has content
+/// Trait given to types that has content to provide
+/// a seemless transition between the content and the
+/// outer parent.
 pub trait Contentable {
   fn get_body(&self) -> &str;
-  fn set_body(&mut self, String) -> String;
-  fn has_header(&self, &str) -> Option<&str>;
-  fn add_header(&mut self, String, String) -> Option<String>;
+  fn set_body(&mut self, new_body: String) -> String;
+  fn has_header(&self, name: &str) -> Option<&str>;
+  fn add_header(&mut self, name: String, value: String) -> Option<String>;
 }
 
 #[cfg(test)]
