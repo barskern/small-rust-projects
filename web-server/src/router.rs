@@ -53,7 +53,7 @@ mod tests {
 
   #[test]
   fn turn_path_into_uri_valid() {
-    let path = PathBuf::from(r"./html/about/us/index.html");
+    let path: PathBuf = PathBuf::from(r"./html/about/us/index.html");
     let dir_depth = 2;
     let path_buf = utils::turn_path_into_uri(&path, dir_depth, false);
     let path_str = path_buf.to_str()

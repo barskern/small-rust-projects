@@ -1,12 +1,11 @@
-use std::{io, fmt, error, string};
-use super::http::ParseHttpError;
-
+use std::{error, fmt, io, string};
+use http::ParseHttpError;
 
 #[derive(Debug)]
 pub enum HandleStreamError {
   Io(io::Error),
   ParseHttp(ParseHttpError),
-  ReadStream(ReadStreamError)  
+  ReadStream(ReadStreamError),
 }
 
 impl fmt::Display for HandleStreamError {
@@ -14,7 +13,7 @@ impl fmt::Display for HandleStreamError {
     match *self {
       HandleStreamError::Io(ref err) => write!(f, "IO error: {}", err),
       HandleStreamError::ParseHttp(ref err) => write!(f, "Parse error: {}", err),
-      HandleStreamError::ReadStream(ref err) => write!(f, "Parse error: {}", err),
+      HandleStreamError::ReadStream(ref err) => write!(f, "Read stream error: {}", err),
     }
   }
 }

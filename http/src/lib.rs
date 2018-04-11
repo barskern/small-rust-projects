@@ -1,3 +1,5 @@
+#![feature(try_from, try_trait, iterator_try_fold)]
+
 pub mod errors;
 pub mod content;
 pub mod request;

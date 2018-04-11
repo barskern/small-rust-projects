@@ -4,3 +4,4 @@ version = "0.1.0"
 authors = ["Ole Martin Ruud <barskern@outlook.com>"]
 
 [dependencies]
+http = { path = "../http" }

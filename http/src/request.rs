@@ -1,10 +1,12 @@
 use std::{convert::TryFrom, fmt::{self, Display}, str::FromStr};
 
-pub use super::{content::{Content, Contentable}, errors::{ParseRequestError, ParseRequestMethodError},
-                HTTP_VERSION};
+pub use super::{content::{Content, Contentable},
+                errors::{ParseRequestError, ParseRequestMethodError}};
 
-/// A struct which contains information for an http request. 
-/// When written to string, the struct is valid http, which 
+use super::HTTP_VERSION;
+
+/// A struct which contains information for an http request.
+/// When written to string, the struct is valid http, which
 /// can be directly sent across a TCP-connection.
 #[derive(Debug, PartialEq)]
 pub struct Request {
@@ -35,7 +37,7 @@ impl Contentable for Request {
     self.content.get_body()
   }
   fn set_body(&mut self, new_body: String) -> String {
-    self.content.set_body(new_body)    
+    self.content.set_body(new_body)
   }
   fn has_header(&self, name: &str) -> Option<&str> {
     self.content.has_header(name)

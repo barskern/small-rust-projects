@@ -1,7 +1,7 @@
-use std::{collections::HashMap, convert::TryFrom, default::Default, fmt::{self, Display}, mem};
+use std::{mem, collections::HashMap, convert::TryFrom, default::Default, fmt::{self, Display}};
 use super::errors::ParseContentError;
 
-/// A struct which has controll over the 
+/// A struct which has controll over the
 /// content of a http message. This includes
 /// headers and body.
 #[derive(Debug, PartialEq)]

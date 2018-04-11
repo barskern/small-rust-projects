@@ -1,8 +1,9 @@
 use std::fmt::{self, Display};
-use super::{content::{Content, Contentable}, HTTP_VERSION};
+pub use super::content::{Content, Contentable};
+use super::HTTP_VERSION;
 
 /// A struct which is a representation of a http-response
-/// message. When written to string, it is valid http, which can 
+/// message. When written to string, it is valid http, which can
 /// be sent directly across a TCP-connection.
 #[derive(Debug, PartialEq)]
 pub struct Response {
@@ -31,7 +32,7 @@ impl Contentable for Response {
     self.content.get_body()
   }
   fn set_body(&mut self, new_body: String) -> String {
-    self.content.set_body(new_body)    
+    self.content.set_body(new_body)
   }
   fn has_header(&self, name: &str) -> Option<&str> {
     self.content.has_header(name)

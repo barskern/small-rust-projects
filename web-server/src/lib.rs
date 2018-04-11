@@ -1,6 +1,7 @@
 #![feature(try_from, try_trait, iterator_try_fold)]
 
-mod http;
+extern crate http;
+
 mod router;
 mod utils;
 mod errors;
@@ -22,9 +23,10 @@ pub fn run(port: usize) {
   for stream in listener.incoming() {
     match stream
       .map_err(HandleStreamError::from)
-      .and_then(|s| handle_stream(&router, s)) {
+      .and_then(|s| handle_stream(&router, s))
+    {
       Ok(_) => println!("Sent response to user"),
-      Err(e) => eprintln!("Error: {}", e)
+      Err(e) => eprintln!("Error: {}", e),
     };
   }
 }
@@ -34,7 +36,7 @@ fn handle_stream(r: &Router, mut s: TcpStream) -> Result<(), HandleStreamError> 
 
   http::Request::try_from(request_str)
     .map_err(ParseHttpError::from)
-    .map_err(HandleStreamError::from)    
+    .map_err(HandleStreamError::from)
     .map(|req| r.handle_request(req))
     .and_then(|res| write!(s, "{}", res).map_err(HandleStreamError::from))
 }

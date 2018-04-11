@@ -4,8 +4,6 @@ enum ParseErrorKind {
   Empty,
 }
 
-use self::ParseErrorKind::*;
-
 macro_rules! parse_from_string_error {
   ($type_name:ident, $error_name:ident $(, $child_parse_error_name:ident )* ) => {
     #[derive(Debug, Clone, PartialEq, Eq)]
@@ -16,13 +14,13 @@ macro_rules! parse_from_string_error {
     impl $error_name {
       pub fn invalid() -> Self {
         $error_name {
-          kind: Invalid
+          kind: ParseErrorKind::Invalid
         }
       }
 
       pub fn empty() -> Self {
         $error_name {
-          kind: Empty
+          kind: ParseErrorKind::Empty
         }
       }
     }
@@ -36,6 +34,7 @@ macro_rules! parse_from_string_error {
 
     impl ::std::error::Error for $error_name {
       fn description(&self) -> &str {
+        use self::ParseErrorKind::*;
         match self.kind {
           Invalid => concat!("invalid ", stringify!($type_name), " literal"),
           Empty => concat!("cannot parse ", stringify!($type_name), " from empty string"),
@@ -52,6 +51,7 @@ macro_rules! parse_from_string_error {
     $(
       impl From<$child_parse_error_name> for $error_name {
         fn from(err: $child_parse_error_name) -> Self {
+          use self::ParseErrorKind::*;
           match err.kind {
             Invalid => $error_name::invalid(),
             Empty => $error_name::empty()
