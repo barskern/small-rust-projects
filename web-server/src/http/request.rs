@@ -1,34 +1,47 @@
-use std::convert::TryFrom;
-use std::str::FromStr;
-pub use super::errors::{
-  ParseRequestError, 
-  ParseRequestMethodError
-};
-use super::content::Content;
+use std::{convert::TryFrom, fmt::{self, Display}, str::FromStr};
 
+pub use super::{content::{Content, Contentable}, errors::{ParseRequestError, ParseRequestMethodError},
+                HTTP_VERSION};
+
+/// A struct which contains information for an http request. 
+/// When written to string, the struct is valid http, which 
+/// can be directly sent across a TCP-connection.
 #[derive(Debug, PartialEq)]
 pub struct Request {
   method: RequestMethod,
   uri: String,
-  version: String,
   content: Content,
 }
 
 impl Request {
+  pub fn new(uri: String) -> Request {
+    Request {
+      method: RequestMethod::GET,
+      uri,
+      content: Content::default(),
+    }
+  }
+
   pub fn method(&self) -> RequestMethod {
     self.method
   }
   pub fn uri(&self) -> &str {
     &self.uri
   }
-  pub fn version(&self) -> &str {
-    &self.version
+}
+
+impl Contentable for Request {
+  fn get_body(&self) -> &str {
+    self.content.get_body()
   }
-  pub fn body(&self) -> &str {
-    self.content.body()
+  fn set_body(&mut self, new_body: String) -> String {
+    self.content.set_body(new_body)    
   }
-  pub fn has_header(&self, header: &str) -> Option<&str> {
-    self.content.has_header(header)
+  fn has_header(&self, name: &str) -> Option<&str> {
+    self.content.has_header(name)
+  }
+  fn add_header(&mut self, name: String, value: String) -> Option<String> {
+    self.content.add_header(name, value)
   }
 }
 
@@ -40,39 +53,47 @@ impl TryFrom<String> for Request {
       return Err(ParseRequestError::empty());
     }
 
-    let content_str = {    
-      let newline_pos = s
-        .find("\r\n")
+    let content_str = {
+      let newline_pos = s.find("\r\n")
         .map(|pos| pos + 2)
-        .or(s
-          .find('\n')
-          .map(|pos| pos + 1)
-        )?;
+        .or(s.find('\n').map(|pos| pos + 1))?;
       s.split_off(newline_pos)
     };
 
-    let request_line: Vec<&str> = s
-      .split_whitespace()
-      .collect();
+    let request_line: Vec<&str> = s.split_whitespace().collect();
 
     if request_line.len() < 3 {
+      return Err(ParseRequestError::invalid());
+    }
+    let version = request_line[2];
+    if version != HTTP_VERSION {
       return Err(ParseRequestError::invalid());
     }
 
     let method = RequestMethod::from_str(request_line[0])?;
     let uri = request_line[1].to_string();
-    let version = request_line[2].to_string();
     let content = Content::try_from(content_str)?;
 
     Ok(Request {
       method,
       uri,
-      version,
       content,
     })
   }
 }
 
+impl Display for Request {
+  fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+    write!(
+      fmt,
+      "{} {} {}\r\n{}",
+      self.method, self.uri, HTTP_VERSION, self.content
+    )
+  }
+}
+
+/// A small enum which encodes the type of
+/// http-request.
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum RequestMethod {
   GET,
@@ -95,6 +116,18 @@ impl FromStr for RequestMethod {
   }
 }
 
+impl Display for RequestMethod {
+  fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+    let method_str = match *self {
+      RequestMethod::GET => "GET",
+      RequestMethod::HEAD => "HEAD",
+      RequestMethod::PUT => "PUT",
+      RequestMethod::POST => "POST",
+    };
+    write!(fmt, "{}", method_str)
+  }
+}
+
 #[cfg(test)]
 mod tests {
   use super::*;
@@ -109,8 +142,7 @@ mod tests {
     let expected_request = Request {
       method: RequestMethod::GET,
       uri: "/".to_string(),
-      version: "HTTP/1.1".to_string(),
-      content: Content::new("".to_string()),
+      content: Content::default(),
     };
 
     assert_eq!(expected_request, request);

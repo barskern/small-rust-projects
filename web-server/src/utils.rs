@@ -1,14 +1,16 @@
-use std::fs::{self, DirEntry};
-use std::path::Path;
-use std::io::{self, Read};
-use std::string;
-use std::error;
-use std::fmt;
-use std::net::TcpStream;
+use std::{
+  fs::{self, DirEntry},
+  path::{Path,PathBuf},
+  io::Read,
+  net::TcpStream
+};
+
+use super::errors::ReadStreamError;
 
 const MAX_REQUEST_SIZE: usize = 1024;
 
-/// Visits all files in from given dir to deepest nested subdir. Applies the function to all files.
+/// Visits all files in from given dir to deepest nested 
+/// subdir. Applies the function to all files.
 pub fn visit_dir<F>(dir_path: &Path, f: &mut F)
 where
   F: FnMut(DirEntry, usize),
@@ -40,48 +42,20 @@ where
     .for_each(|dir_entry| f(dir_entry, dir_depth));
 }
 
-#[derive(Debug)]
-/// An error which is a wrapper around possible errors on reading a TcpStream.
-pub enum ReadStreamError {
-  Io(io::Error),
-  Parse(string::FromUtf8Error),
-}
+/// Turns a possible global file path into an uri path
+pub fn turn_path_into_uri(path: &Path, dir_depth: usize, inc_filename: bool) -> PathBuf {
+  let skip_amount = if inc_filename { 0 } else { 1 };
+  let take_amount = if inc_filename { dir_depth + 1 } else { dir_depth };
 
-impl fmt::Display for ReadStreamError {
-  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-    match *self {
-      ReadStreamError::Io(ref err) => write!(f, "IO error: {}", err),
-      ReadStreamError::Parse(ref err) => write!(f, "Parse error: {}", err),
-    }
-  }
-}
-
-impl error::Error for ReadStreamError {
-  fn description(&self) -> &str {
-    match *self {
-      ReadStreamError::Io(ref err) => err.description(),
-      ReadStreamError::Parse(ref err) => err.description(),
-    }
-  }
-
-  fn cause(&self) -> Option<&error::Error> {
-    match *self {
-      ReadStreamError::Io(ref err) => Some(err),
-      ReadStreamError::Parse(ref err) => Some(err),
-    }
-  }
-}
-
-impl From<io::Error> for ReadStreamError {
-  fn from(err: io::Error) -> ReadStreamError {
-    ReadStreamError::Io(err)
-  }
-}
-
-impl From<string::FromUtf8Error> for ReadStreamError {
-  fn from(err: string::FromUtf8Error) -> ReadStreamError {
-    ReadStreamError::Parse(err)
-  }
+  path
+    .iter()
+    .rev()
+    .skip(skip_amount)
+    .take(take_amount)
+    .collect::<Vec<_>>()
+    .iter()
+    .rev()
+    .collect::<PathBuf>()
 }
 
 /// Reads request from stream and returns a string which contains the request in UTF8

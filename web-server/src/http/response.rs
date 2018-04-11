@@ -1,11 +1,12 @@
-use std::collections::HashMap;
 use std::fmt::{self, Display};
-use super::content::Content;
+use super::{content::{Content, Contentable}, HTTP_VERSION};
 
+/// A struct which is a representation of a http-response
+/// message. When written to string, it is valid http, which can 
+/// be sent directly across a TCP-connection.
 #[derive(Debug, PartialEq)]
 pub struct Response {
   status_code: StatusCode,
-  version: String,
   content: Content,
 }
 
@@ -13,30 +14,47 @@ impl Response {
   pub fn new(content: String) -> Response {
     Response {
       status_code: StatusCode::Accepted,
-      version: "HTTP/1.1".to_string(),
-      content: Content::new(content)
+      content: Content::new(content),
     }
   }
 
   pub fn not_found() -> Response {
     Response {
       status_code: StatusCode::NotFound,
-      version: "HTTP/1.1".to_string(),
-      content: Content::default()
+      content: Content::default(),
     }
+  }
+}
+
+impl Contentable for Response {
+  fn get_body(&self) -> &str {
+    self.content.get_body()
+  }
+  fn set_body(&mut self, new_body: String) -> String {
+    self.content.set_body(new_body)    
+  }
+  fn has_header(&self, name: &str) -> Option<&str> {
+    self.content.has_header(name)
+  }
+  fn add_header(&mut self, name: String, value: String) -> Option<String> {
+    self.content.add_header(name, value)
   }
 }
 
 impl Display for Response {
   fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-    write!(fmt, "{} {} {}\r\n{}", 
-      self.version, 
-      self.status_code, 
+    write!(
+      fmt,
+      "{} {} {}\r\n{}",
+      HTTP_VERSION,
+      self.status_code,
       self.status_code.to_reason_phrase(),
-      self.content)
+      self.content
+    )
   }
 }
 
+/// Encodes the status of a http-response
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum StatusCode {
   Continue = 100,
@@ -85,45 +103,45 @@ impl StatusCode {
   pub fn to_reason_phrase(&self) -> String {
     match *self {
       StatusCode::Continue => "Continue",
-      StatusCode::SwitchingProtocols => "Switching-Protocols",
+      StatusCode::SwitchingProtocols => "Switching Protocols",
       StatusCode::OK => "OK",
       StatusCode::Created => "Created",
       StatusCode::Accepted => "Accepted",
-      StatusCode::NonAuthoritativeInformation => "Non-Authoritative-Information",
-      StatusCode::NoContent => "No-Content",
-      StatusCode::ResetContent => "Reset-Content",
-      StatusCode::PartialContent => "Partial-Content",
-      StatusCode::MultipleChoices => "Multiple-Choices",
-      StatusCode::MovedPermanently => "Moved-Permanently",
+      StatusCode::NonAuthoritativeInformation => "Non Authoritative Information",
+      StatusCode::NoContent => "No Content",
+      StatusCode::ResetContent => "Reset Content",
+      StatusCode::PartialContent => "Partial Content",
+      StatusCode::MultipleChoices => "Multiple Choices",
+      StatusCode::MovedPermanently => "Moved Permanently",
       StatusCode::Found => "Found",
-      StatusCode::SeeOther => "See-Other",
-      StatusCode::NotModified => "Not-Modified",
-      StatusCode::UseProxy => "Use-Proxy",
-      StatusCode::TemporaryRedirect => "Temporary-Redirect",
-      StatusCode::BadRequest => "Bad-Request",
+      StatusCode::SeeOther => "See Other",
+      StatusCode::NotModified => "Not Modified",
+      StatusCode::UseProxy => "Use Proxy",
+      StatusCode::TemporaryRedirect => "Temporary Redirect",
+      StatusCode::BadRequest => "Bad Request",
       StatusCode::Unauthorized => "Unauthorized",
-      StatusCode::PaymentRequired => "Payment-Required",
+      StatusCode::PaymentRequired => "Payment Required",
       StatusCode::Forbidden => "Forbidden",
-      StatusCode::NotFound => "Not-Found",
-      StatusCode::MethodNotAllowed => "Method-Not-Allowed",
-      StatusCode::NotAcceptable => "Not-Acceptable",
-      StatusCode::ProxyAuthenticationRequired => "Proxy-Authentication-Required",
-      StatusCode::RequestTimeout => "Request-Timeout",
+      StatusCode::NotFound => "Not Found",
+      StatusCode::MethodNotAllowed => "Method Not Allowed",
+      StatusCode::NotAcceptable => "Not Acceptable",
+      StatusCode::ProxyAuthenticationRequired => "Proxy Authentication Required",
+      StatusCode::RequestTimeout => "Request Timeout",
       StatusCode::Conflict => "Conflict",
       StatusCode::Gone => "Gone",
-      StatusCode::LengthRequired => "Length-Required",
-      StatusCode::PreconditionFailed => "Precondition-Failed",
-      StatusCode::RequestEntityTooLarge => "Request-Entity-Too-Large",
-      StatusCode::RequestURITooLarge => "Request URI Too Large",
-      StatusCode::UnsupportedMediaType => "Unsupported-Media-Type",
-      StatusCode::Requestedrangenotsatisfiable => "Requested-range-not-satisfiable",
-      StatusCode::ExpectationFailed => "Expectation-Failed",
-      StatusCode::InternalServerError => "Internal-Server-Error",
-      StatusCode::NotImplemented => "Not-Implemented",
-      StatusCode::BadGateway => "Bad-Gateway",
-      StatusCode::ServiceUnavailable => "Service-Unavailable",
-      StatusCode::GatewayTimeout => "Gateway-Timeout",
-      StatusCode::HTTPVersionnotsupported => "HTTP-Version-not-supported",
+      StatusCode::LengthRequired => "Length Required",
+      StatusCode::PreconditionFailed => "Precondition Failed",
+      StatusCode::RequestEntityTooLarge => "Request Entity Too Large",
+      StatusCode::RequestURITooLarge => "Request-URI Too Large",
+      StatusCode::UnsupportedMediaType => "Unsupported Media Type",
+      StatusCode::Requestedrangenotsatisfiable => "Requested range not satisfiable",
+      StatusCode::ExpectationFailed => "Expectation Failed",
+      StatusCode::InternalServerError => "Internal Server Error",
+      StatusCode::NotImplemented => "Not Implemented",
+      StatusCode::BadGateway => "Bad Gateway",
+      StatusCode::ServiceUnavailable => "Service Unavailable",
+      StatusCode::GatewayTimeout => "Gateway Timeout",
+      StatusCode::HTTPVersionnotsupported => "HTTP-Version not supported",
     }.to_string()
   }
 }
@@ -136,7 +154,6 @@ impl Display for StatusCode {
 
 #[cfg(test)]
 mod tests {
-  use super::*;
-
+  // use super::*;
   // TODO
 }

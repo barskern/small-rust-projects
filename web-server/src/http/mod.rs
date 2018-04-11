@@ -1,8 +1,9 @@
-
 pub mod errors;
 pub mod content;
 pub mod request;
 pub mod response;
+
+pub const HTTP_VERSION: &str = "HTTP/1.1";
 
 pub use self::errors::ParseHttpError;
 pub use self::request::Request;

@@ -1,8 +1,7 @@
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 enum ParseErrorKind {
   Invalid,
-  Empty
+  Empty,
 }
 
 use self::ParseErrorKind::*;
@@ -63,9 +62,10 @@ macro_rules! parse_from_string_error {
   }
 }
 
-
-parse_from_string_error!(Request, ParseRequestError, 
-  ParseRequestMethodError, 
+parse_from_string_error!(
+  Request,
+  ParseRequestError,
+  ParseRequestMethodError,
   ParseContentError
 );
 
@@ -73,4 +73,4 @@ parse_from_string_error!(RequestMethod, ParseRequestMethodError);
 
 parse_from_string_error!(Content, ParseContentError);
 
-parse_from_string_error!(Http, ParseHttpError);
+parse_from_string_error!(Http, ParseHttpError, ParseRequestError);
