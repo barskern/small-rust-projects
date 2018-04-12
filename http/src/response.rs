@@ -14,17 +14,10 @@ pub struct Response {
 }
 
 impl Response {
-  pub fn new(content: String) -> Response {
+  pub fn new(status_code: StatusCode, body: String) -> Response {
     Response {
-      status_code: StatusCode::Accepted,
-      content: Content::new(content),
-    }
-  }
-
-  pub fn not_found() -> Response {
-    Response {
-      status_code: StatusCode::NotFound,
-      content: Content::default(),
+      status_code,
+      content: Content::new(body),
     }
   }
 }
@@ -138,7 +131,7 @@ pub enum StatusCode {
 }
 
 impl StatusCode {
-  pub fn to_reason_phrase(&self) -> String {
+  pub fn to_reason_phrase(&self) -> &str {
     use self::StatusCode::*;
     match *self {
       Continue => "Continue",
@@ -181,7 +174,7 @@ impl StatusCode {
       ServiceUnavailable => "Service Unavailable",
       GatewayTimeout => "Gateway Timeout",
       HTTPVersionnotsupported => "HTTP-Version not supported",
-    }.to_string()
+    }
   }
 }
 
@@ -254,6 +247,74 @@ impl Display for StatusCode {
 
 #[cfg(test)]
 mod tests {
-  // use super::*;
-  // TODO
+  use super::*;
+
+  #[test]
+  fn construct_response() {
+    let res = Response::new(StatusCode::OK, "hello world".to_string());
+
+    let expected_res = Response {
+      status_code: StatusCode::OK,
+      content: Content::new("hello world".to_string()),
+    };
+
+    assert_eq!(expected_res, res);
+  }
+
+  #[test]
+  fn response_to_string() {
+    let res = Response::new(StatusCode::OK, "hello world".to_string());
+
+    let expected_str = format!("{} 200 OK\r\n\r\nhello world", HTTP_VERSION).to_string();
+
+    assert_eq!(expected_str, res.to_string());
+  }
+
+  #[test]
+  fn use_headers() {
+    let mut res = Response::new(StatusCode::OK, "hello world".to_string());
+    res.add_header("Host".to_string(), "Localhost".to_string());
+
+    assert_eq!(
+      Some("Localhost"),
+      res.has_header("Host"),
+      "Didn't return expected header"
+    );
+    assert_eq!(
+      Some("Localhost"),
+      res.has_header("Host"),
+      "Content gave away ownership"
+    );
+  }
+
+  #[test]
+  fn status_code_from_num() {
+    let num = 200;
+    match StatusCode::try_from(num) {
+      Ok(code) => assert_eq!(StatusCode::OK, code, "Status code 200 not equal to OK"),
+      Err(e) => panic!("Error when converting {} to StatusCode: {}", num, e),
+    }
+  }
+
+  #[test]
+  fn status_code_from_str() {
+    let num = "404";
+    match StatusCode::from_str(num) {
+      Ok(code) => assert_eq!(
+        StatusCode::NotFound,
+        code,
+        "Status code 404 not equal to Not Found"
+      ),
+      Err(e) => panic!("Error when converting {} to StatusCode: {}", num, e),
+    }
+  }
+
+  #[test]
+  fn status_code_to_str() {
+    assert_eq!(
+      "Accepted",
+      StatusCode::Accepted.to_reason_phrase(),
+      "Status code didn't convert correctly to string"
+    );
+  }
 }

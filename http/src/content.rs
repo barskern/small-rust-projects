@@ -3,6 +3,12 @@ use super::errors::ParseContentError;
 
 /// A struct which has contains the content of a
 /// http message. This includes headers and body.
+///
+/// This structure is only used inside Request
+/// or Response. This generalization has been
+/// made because the "content" of an http message
+/// is the same in both the request and response.
+/// A single definition will limit code duplication.
 #[derive(Debug, PartialEq)]
 pub struct Content {
   headers: HashMap<String, String>,
@@ -65,7 +71,17 @@ impl TryFrom<String> for Content {
       let body_start_pos = s.find("\r\n\r\n")
         .map(|pos| pos + 4)
         .or(s.find("\n\n").map(|pos| pos + 2))?;
-      s.split_off(body_start_pos)
+      println!(
+        "body_start_pos: {:?}, s.len(): {:?}",
+        body_start_pos,
+        s.len()
+      );
+
+      if s.len() <= body_start_pos {
+        "".to_string()
+      } else {
+        s.split_off(body_start_pos)
+      }
     };
 
     let headers: HashMap<String, String> = s.lines()
@@ -86,7 +102,8 @@ impl TryFrom<String> for Content {
 
 /// Trait given to types that has content to provide
 /// a seemless transition between the content and the
-/// outer parent.
+/// outer parent. This makes it easy to interact with
+/// the content within a Request and a Response.
 pub trait Contentable {
   fn get_body(&self) -> &str;
   fn set_body(&mut self, new_body: String) -> String;
@@ -99,13 +116,17 @@ mod tests {
   use super::*;
 
   #[test]
-  fn content_from_string_empty_valid() {
+  fn content_from_empty_string() {
     let content_str = "\r\n\r\n".to_string();
     let content = match Content::try_from(content_str.clone()) {
       Ok(content) => content,
       Err(e) => panic!("Error: {}: {}", e, content_str),
     };
-    assert_eq!(Content::default(), content);
+    assert_eq!(
+      Content::default(),
+      content,
+      "Default content not equal to content from empty string"
+    );
   }
 
   #[test]
@@ -118,7 +139,7 @@ mod tests {
   }
 
   #[test]
-  fn content_from_string_valid() {
+  fn content_from_string() {
     let content_str = "Host: Localhost\r\nCache: 3000\r\n\r\nHello world in the body".to_string();
     let content = match Content::try_from(content_str.clone()) {
       Ok(content) => content,
@@ -134,7 +155,10 @@ mod tests {
       body: "Hello world in the body".to_string(),
     };
 
-    assert_eq!(expected_content, content);
+    assert_eq!(
+      expected_content, content,
+      "Did not parse content into expected structure"
+    );
   }
 
   #[test]
