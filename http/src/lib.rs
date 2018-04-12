@@ -13,4 +13,6 @@ pub const HTTP_VERSION: &str = "HTTP/1.1";
 
 pub use self::errors::ParseHttpError;
 pub use self::request::Request;
+pub use self::request::RequestMethod;
 pub use self::response::Response;
+pub use self::response::StatusCode;
