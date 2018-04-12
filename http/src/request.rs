@@ -1,13 +1,13 @@
 use std::{convert::TryFrom, fmt::{self, Display}, str::FromStr};
 
-pub use super::{content::{Content, Contentable},
-                errors::{ParseRequestError, ParseRequestMethodError}};
-
+use super::content::{Content, Contentable};
 use super::HTTP_VERSION;
 
+pub use super::errors::{ParseRequestError, ParseRequestMethodError};
 /// A struct which contains information for an http request.
 /// When written to string, the struct is valid http, which
 /// can be directly sent across a TCP-connection.
+
 #[derive(Debug, PartialEq)]
 pub struct Request {
   method: RequestMethod,
@@ -236,45 +236,4 @@ mod tests {
     }
   }
 
-  #[test]
-  fn use_headers() {
-    let mut req = Request::new(RequestMethod::GET, "/hello_world".to_string());
-    req.add_header("Host".to_string(), "Localhost".to_string());
-
-    assert_eq!(
-      Some("Localhost"),
-      req.has_header("Host"),
-      "Didn't return expected value for header"
-    );
-    assert_eq!(
-      Some("Localhost"),
-      req.has_header("Host"),
-      "Content gave away ownership when getting header"
-    );
-  }
-
-  #[test]
-  fn replace_body() {
-    let mut req = Request::new(RequestMethod::PUT, "/user_data".to_string());
-    req.set_body("{\"username\": \"johnny\"}".to_string());
-
-    assert_eq!(
-      "{\"username\": \"johnny\"}",
-      req.get_body(),
-      "Didn't give back the correct body"
-    );
-
-    let old_body = req.set_body("{\"username\": \"karl\"}".to_string());
-
-    assert_eq!(
-      "{\"username\": \"johnny\"}", old_body,
-      "Didn't give back the correct \"old\" body after replacement"
-    );
-
-    assert_eq!(
-      "{\"username\": \"karl\"}",
-      req.get_body(),
-      "Didn't give back the correct body after replacement"
-    );
-  }
 }

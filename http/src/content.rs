@@ -105,9 +105,14 @@ impl TryFrom<String> for Content {
 /// outer parent. This makes it easy to interact with
 /// the content within a Request and a Response.
 pub trait Contentable {
+  /// Gets a immutable borrow of the body of the message
   fn get_body(&self) -> &str;
+  /// Sets the body to a new string and returns the old body
   fn set_body(&mut self, new_body: String) -> String;
+  /// Checks to see if header exists and returns value of said header
   fn has_header(&self, name: &str) -> Option<&str>;
+  /// Adds a header to the message. Will return "Some()" with the value of
+  /// the previously defined header if overwriting.
   fn add_header(&mut self, name: String, value: String) -> Option<String>;
 }
 
@@ -168,5 +173,47 @@ mod tests {
       Ok(_) => panic!("Should get error when unvalid http"),
       Err(_) => {}
     };
+  }
+
+  #[test]
+  fn use_headers() {
+    let mut cont = Content::new("hello_world".to_string());
+    cont.add_header("Host".to_string(), "Localhost".to_string());
+
+    assert_eq!(
+      Some("Localhost"),
+      cont.has_header("Host"),
+      "Didn't return expected value for header"
+    );
+    assert_eq!(
+      Some("Localhost"),
+      cont.has_header("Host"),
+      "Content gave away ownership when getting header"
+    );
+  }
+
+  #[test]
+  fn replace_body() {
+    let mut cont = Content::new("{\"username\": \"johnny\"}".to_string());
+    cont.add_header("Host".to_string(), "Localhost".to_string());
+
+    assert_eq!(
+      "{\"username\": \"johnny\"}",
+      cont.get_body(),
+      "Didn't give back the correct body"
+    );
+
+    let old_body = cont.set_body("{\"username\": \"karl\"}".to_string());
+
+    assert_eq!(
+      "{\"username\": \"johnny\"}", old_body,
+      "Didn't give back the correct \"old\" body after replacement"
+    );
+
+    assert_eq!(
+      "{\"username\": \"karl\"}",
+      cont.get_body(),
+      "Didn't give back the correct body after replacement"
+    );
   }
 }

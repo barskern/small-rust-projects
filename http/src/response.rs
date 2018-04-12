@@ -1,8 +1,9 @@
 use std::{convert::TryFrom, fmt::{self, Display}, str::FromStr};
 
-pub use super::{content::{Content, Contentable},
-                errors::{ParseResponseError, ParseStatusCodeError}};
+use super::content::{Content, Contentable};
 use super::HTTP_VERSION;
+
+pub use super::errors::{ParseResponseError, ParseStatusCodeError};
 
 /// A struct which is a representation of a http-response
 /// message. When written to string, it is valid http, which can
