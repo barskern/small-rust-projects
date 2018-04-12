@@ -1,9 +1,4 @@
-use std::{
-  collections::HashMap,
-  fs::{DirEntry, File},
-  path::{Path, PathBuf},
-  io::Read
-};
+use std::{collections::HashMap, fs::{DirEntry, File}, io::Read, path::{Path, PathBuf}};
 
 use http;
 use utils;
@@ -18,20 +13,16 @@ impl Router {
 
     utils::visit_dir(dir_path, &mut |entry: DirEntry, dir_depth: usize| {
       let file_path = entry.path();
-      let mut file = File::open(&file_path)
-        .expect(&format!("Unable to open file at: {}",
-          file_path.to_string_lossy())
-        );
+      let mut file = File::open(&file_path).expect(&format!(
+        "Unable to open file at: {}",
+        file_path.to_string_lossy()
+      ));
 
       let mut file_contents = String::new();
       let _ = file.read_to_string(&mut file_contents);
 
-      let uri = format!(
-        "/{}",
-        utils::turn_path_into_uri(&file_path, dir_depth, false)
-          .to_str()
-          .expect("Unable to turn filepath into uri")
-      );
+      let uri = utils::turn_path_into_uri(&file_path, dir_depth, false)
+        .expect("Unable to turn filepath into uri");
 
       paths.insert(uri, file_contents);
     });
@@ -40,9 +31,9 @@ impl Router {
 
   pub fn handle_request(&self, request: http::Request) -> http::Response {
     if let Some(res_string) = self.paths.get(request.uri()) {
-      http::Response::new(res_string.clone())
+      http::Response::new(http::StatusCode::OK, res_string.clone())
     } else {
-      http::Response::not_found()
+      http::Response::new(http::StatusCode::NotFound, "".to_string())
     }
   }
 }
@@ -55,9 +46,8 @@ mod tests {
   fn turn_path_into_uri_valid() {
     let path: PathBuf = PathBuf::from(r"./html/about/us/index.html");
     let dir_depth = 2;
-    let path_buf = utils::turn_path_into_uri(&path, dir_depth, false);
-    let path_str = path_buf.to_str()
-      .expect("Unable to turn filepath into uri");    
+    let path_str =
+      utils::turn_path_into_uri(&path, dir_depth, false).expect("Unable to turn filepath into uri");
 
     assert_eq!(path_str, "about/us");
   }

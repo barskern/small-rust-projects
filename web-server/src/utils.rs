@@ -43,7 +43,7 @@ where
 }
 
 /// Turns a possible global file path into an uri path
-pub fn turn_path_into_uri(path: &Path, dir_depth: usize, inc_filename: bool) -> PathBuf {
+pub fn turn_path_into_uri(path: &Path, dir_depth: usize, inc_filename: bool) -> Option<String> {
   let skip_amount = if inc_filename { 0 } else { 1 };
   let take_amount = if inc_filename { dir_depth + 1 } else { dir_depth };
 
@@ -56,6 +56,8 @@ pub fn turn_path_into_uri(path: &Path, dir_depth: usize, inc_filename: bool) -> 
     .iter()
     .rev()
     .collect::<PathBuf>()
+    .to_str()
+    .map(|s| s.to_string())
 }
 
 /// Reads request from stream and returns a string which contains the request in UTF8
