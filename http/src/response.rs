@@ -278,12 +278,12 @@ mod tests {
     assert_eq!(
       Some("Localhost"),
       res.has_header("Host"),
-      "Didn't return expected header"
+      "Didn't return expected value for header"
     );
     assert_eq!(
       Some("Localhost"),
       res.has_header("Host"),
-      "Content gave away ownership"
+      "Content gave away ownership when getting header"
     );
   }
 

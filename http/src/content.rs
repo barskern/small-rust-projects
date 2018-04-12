@@ -130,7 +130,7 @@ mod tests {
   }
 
   #[test]
-  fn content_from_string_empty_unvalid() {
+  fn content_from_empty_string_unvalid() {
     let content_str = "\r\n".to_string();
     match Content::try_from(content_str.clone()) {
       Ok(_) => panic!("Should not get content when not following protocol."),
@@ -143,7 +143,7 @@ mod tests {
     let content_str = "Host: Localhost\r\nCache: 3000\r\n\r\nHello world in the body".to_string();
     let content = match Content::try_from(content_str.clone()) {
       Ok(content) => content,
-      Err(e) => panic!("Error: {}: {}", e, content_str),
+      Err(e) => panic!("Should not get error on valid http: {}", e),
     };
 
     let mut headers = HashMap::new();
@@ -162,10 +162,10 @@ mod tests {
   }
 
   #[test]
-  fn content_from_string_unvalid_header() {
+  fn content_from_unvalid_string_header() {
     let content_str = "Host: Localhost\r\nCache 3000\r\n\r\nHello world in the body".to_string();
     match Content::try_from(content_str.clone()) {
-      Ok(_) => panic!("Should get error when not correct HTTP-format."),
+      Ok(_) => panic!("Should get error when unvalid http"),
       Err(_) => {}
     };
   }

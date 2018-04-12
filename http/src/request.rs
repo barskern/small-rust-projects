@@ -16,9 +16,9 @@ pub struct Request {
 }
 
 impl Request {
-  pub fn new(uri: String) -> Request {
+  pub fn new(method: RequestMethod, uri: String) -> Request {
     Request {
-      method: RequestMethod::GET,
+      method,
       uri,
       content: Content::default(),
     }
@@ -107,11 +107,12 @@ impl FromStr for RequestMethod {
   type Err = ParseRequestMethodError;
 
   fn from_str(s: &str) -> Result<Self, Self::Err> {
+    use self::RequestMethod::*;
     match s {
-      "GET" => Ok(RequestMethod::GET),
-      "HEAD" => Ok(RequestMethod::HEAD),
-      "PUT" => Ok(RequestMethod::PUT),
-      "POST" => Ok(RequestMethod::POST),
+      "GET" => Ok(GET),
+      "HEAD" => Ok(HEAD),
+      "PUT" => Ok(PUT),
+      "POST" => Ok(POST),
       _ => Err(ParseRequestMethodError::invalid()),
     }
   }
@@ -119,11 +120,12 @@ impl FromStr for RequestMethod {
 
 impl Display for RequestMethod {
   fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+    use self::RequestMethod::*;
     let method_str = match *self {
-      RequestMethod::GET => "GET",
-      RequestMethod::HEAD => "HEAD",
-      RequestMethod::PUT => "PUT",
-      RequestMethod::POST => "POST",
+      GET => "GET",
+      HEAD => "HEAD",
+      PUT => "PUT",
+      POST => "POST",
     };
     write!(fmt, "{}", method_str)
   }
@@ -134,36 +136,145 @@ mod tests {
   use super::*;
   #[test]
   fn request_from_string_simple() {
-    let request_str = "GET / HTTP/1.1\r\n\r\n\r\n".to_string();
-    let request = match Request::try_from(request_str) {
-      Ok(request) => request,
-      Err(e) => panic!("Error: {}", e),
+    let req_str = "GET / HTTP/1.1\r\n\r\n\r\n".to_string();
+    let req = match Request::try_from(req_str) {
+      Ok(req) => req,
+      Err(e) => panic!("Should not get error on valid http: {}", e),
     };
 
-    let expected_request = Request {
+    let expected_req = Request {
       method: RequestMethod::GET,
       uri: "/".to_string(),
       content: Content::default(),
     };
 
-    assert_eq!(expected_request, request);
+    assert_eq!(expected_req, req, "Creating Request from String failed");
+  }
+
+  #[test]
+  fn request_from_string() {
+    let req_str = "GET /about/us HTTP/1.1\r\nHost: Localhost\r\nCache: 3000\r\n\r\n".to_string();
+    let req = match Request::try_from(req_str) {
+      Ok(req) => req,
+      Err(e) => panic!("Should not get error on valid http: {}", e),
+    };
+
+    let mut expected_cont = Content::default();
+    expected_cont.add_header("Host".to_string(), "Localhost".to_string());
+    expected_cont.add_header("Cache".to_string(), "3000".to_string());
+    let expected_req = Request {
+      method: RequestMethod::GET,
+      uri: "/about/us".to_string(),
+      content: expected_cont,
+    };
+
+    assert_eq!(expected_req, req, "Creating Request from String failed");
+  }
+
+  #[test]
+  fn request_from_string_with_body() {
+    let req_str = "PUT /new HTTP/1.1\r\nHost: Localhost\r\n\r\n{\"name\": \"John\"}".to_string();
+    let req = match Request::try_from(req_str) {
+      Ok(req) => req,
+      Err(e) => panic!("Should not get error on valid http: {}", e),
+    };
+
+    let mut expected_cont = Content::new("{\"name\": \"John\"}".to_string());
+    expected_cont.add_header("Host".to_string(), "Localhost".to_string());
+    let expected_req = Request {
+      method: RequestMethod::PUT,
+      uri: "/new".to_string(),
+      content: expected_cont,
+    };
+
+    assert_eq!(expected_req, req, "Creating Request from String failed");
+  }
+
+  #[test]
+  fn request_to_string() {
+    let mut req = Request::new(RequestMethod::GET, "/new_page".to_string());
+    req.add_header("Host".to_string(), "Remotehost".to_string());
+
+    let expected_str = "GET /new_page HTTP/1.1\r\nHost: Remotehost\r\n\r\n";
+    assert_eq!(
+      expected_str,
+      req.to_string(),
+      "Didn't convert to valid http"
+    )
+  }
+
+  #[test]
+  fn construct_request() {
+    let mut req = Request::new(RequestMethod::GET, "/about/".to_string());
+    req.add_header("Host".to_string(), "Localhost".to_string());
+
+    let mut expected_cont = Content::default();
+    expected_cont.add_header("Host".to_string(), "Localhost".to_string());
+    let expected_req = Request {
+      method: RequestMethod::GET,
+      uri: "/about/".to_string(),
+      content: expected_cont,
+    };
+
+    assert_eq!(expected_req, req, "Creation not matching expectation");
   }
 
   #[test]
   fn method_from_string_good() {
-    let possible_methods = vec![
-      ("GET", RequestMethod::GET),
-      ("HEAD", RequestMethod::HEAD),
-      ("PUT", RequestMethod::PUT),
-      ("POST", RequestMethod::POST),
-    ];
+    use self::RequestMethod::*;
+    let possible_methods = vec![("GET", GET), ("HEAD", HEAD), ("PUT", PUT), ("POST", POST)];
 
     for (method_str, expected_method) in possible_methods {
       let method = match RequestMethod::from_str(method_str) {
         Ok(method) => method,
-        Err(e) => panic!("Error: {}", e),
+        Err(e) => panic!("Should not get error on valid http: {}", e),
       };
-      assert_eq!(expected_method, method);
+      assert_eq!(
+        expected_method, method,
+        "Didn't get correct result when converting String to RequestMethod"
+      );
     }
+  }
+
+  #[test]
+  fn use_headers() {
+    let mut req = Request::new(RequestMethod::GET, "/hello_world".to_string());
+    req.add_header("Host".to_string(), "Localhost".to_string());
+
+    assert_eq!(
+      Some("Localhost"),
+      req.has_header("Host"),
+      "Didn't return expected value for header"
+    );
+    assert_eq!(
+      Some("Localhost"),
+      req.has_header("Host"),
+      "Content gave away ownership when getting header"
+    );
+  }
+
+  #[test]
+  fn replace_body() {
+    let mut req = Request::new(RequestMethod::PUT, "/user_data".to_string());
+    req.set_body("{\"username\": \"johnny\"}".to_string());
+
+    assert_eq!(
+      "{\"username\": \"johnny\"}",
+      req.get_body(),
+      "Didn't give back the correct body"
+    );
+
+    let old_body = req.set_body("{\"username\": \"karl\"}".to_string());
+
+    assert_eq!(
+      "{\"username\": \"johnny\"}", old_body,
+      "Didn't give back the correct \"old\" body after replacement"
+    );
+
+    assert_eq!(
+      "{\"username\": \"karl\"}",
+      req.get_body(),
+      "Didn't give back the correct body after replacement"
+    );
   }
 }
