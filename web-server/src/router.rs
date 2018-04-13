@@ -49,6 +49,6 @@ mod tests {
     let path_str =
       utils::turn_path_into_uri(&path, dir_depth, false).expect("Unable to turn filepath into uri");
 
-    assert_eq!(path_str, "about/us");
+    assert_eq!(path_str, "/about/us/");
   }
 }

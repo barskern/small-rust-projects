@@ -1,15 +1,10 @@
-use std::{
-  fs::{self, DirEntry},
-  path::{Path,PathBuf},
-  io::Read,
-  net::TcpStream
-};
+use std::{fs::{self, DirEntry}, io::Read, net::TcpStream, path::{Path, PathBuf}};
 
 use super::errors::ReadStreamError;
 
 const MAX_REQUEST_SIZE: usize = 1024;
 
-/// Visits all files in from given dir to deepest nested 
+/// Visits all files in from given dir to deepest nested
 /// subdir. Applies the function to all files.
 pub fn visit_dir<F>(dir_path: &Path, f: &mut F)
 where
@@ -44,8 +39,11 @@ where
 
 /// Turns a possible global file path into an uri path
 pub fn turn_path_into_uri(path: &Path, dir_depth: usize, inc_filename: bool) -> Option<String> {
-  let skip_amount = if inc_filename { 0 } else { 1 };
-  let take_amount = if inc_filename { dir_depth + 1 } else { dir_depth };
+  let (skip_amount, take_amount) = if inc_filename {
+    (0, dir_depth + 1)
+  } else {
+    (1, dir_depth)
+  };
 
   path
     .iter()
@@ -57,7 +55,7 @@ pub fn turn_path_into_uri(path: &Path, dir_depth: usize, inc_filename: bool) -> 
     .rev()
     .collect::<PathBuf>()
     .to_str()
-    .map(|s| s.to_string())
+    .map(|s| if inc_filename || s.len() == 0 { format!("/{}", s) } else { format!("/{}/", s) })
 }
 
 /// Reads request from stream and returns a string which contains the request in UTF8
