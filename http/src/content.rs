@@ -71,11 +71,6 @@ impl TryFrom<String> for Content {
       let body_start_pos = s.find("\r\n\r\n")
         .map(|pos| pos + 4)
         .or(s.find("\n\n").map(|pos| pos + 2))?;
-      println!(
-        "body_start_pos: {:?}, s.len(): {:?}",
-        body_start_pos,
-        s.len()
-      );
 
       if s.len() <= body_start_pos {
         "".to_string()
