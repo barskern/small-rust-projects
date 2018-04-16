@@ -16,10 +16,10 @@ pub struct Request {
 }
 
 impl Request {
-  pub fn new(method: RequestMethod, uri: String) -> Request {
+  pub fn new<S: Into<String>>(method: RequestMethod, uri: S) -> Request {
     Request {
       method,
-      uri,
+      uri: uri.into(),
       content: Content::default(),
     }
   }
@@ -36,13 +36,13 @@ impl Contentable for Request {
   fn get_body(&self) -> &str {
     self.content.get_body()
   }
-  fn set_body(&mut self, new_body: String) -> String {
+  fn set_body<S: Into<String>>(&mut self, new_body: S) -> String {
     self.content.set_body(new_body)
   }
   fn has_header(&self, name: &str) -> Option<&str> {
     self.content.has_header(name)
   }
-  fn add_header(&mut self, name: String, value: String) -> Option<String> {
+  fn add_header<S: Into<String>>(&mut self, name: S, value: S) -> Option<String> {
     self.content.add_header(name, value)
   }
 }
@@ -160,8 +160,8 @@ mod tests {
     };
 
     let mut expected_cont = Content::default();
-    expected_cont.add_header("Host".to_string(), "Localhost".to_string());
-    expected_cont.add_header("Cache".to_string(), "3000".to_string());
+    expected_cont.add_header("Host", "Localhost");
+    expected_cont.add_header("Cache", "3000");
     let expected_req = Request {
       method: RequestMethod::GET,
       uri: "/about/us".to_string(),
@@ -179,8 +179,8 @@ mod tests {
       Err(e) => panic!("Should not get error on valid http: {}", e),
     };
 
-    let mut expected_cont = Content::new("{\"name\": \"John\"}".to_string());
-    expected_cont.add_header("Host".to_string(), "Localhost".to_string());
+    let mut expected_cont = Content::new("{\"name\": \"John\"}");
+    expected_cont.add_header("Host", "Localhost");
     let expected_req = Request {
       method: RequestMethod::PUT,
       uri: "/new".to_string(),
@@ -192,8 +192,8 @@ mod tests {
 
   #[test]
   fn request_to_string() {
-    let mut req = Request::new(RequestMethod::GET, "/new_page".to_string());
-    req.add_header("Host".to_string(), "Remotehost".to_string());
+    let mut req = Request::new(RequestMethod::GET, "/new_page");
+    req.add_header("Host", "Remotehost");
 
     let expected_str = "GET /new_page HTTP/1.1\r\nHost: Remotehost\r\n\r\n";
     assert_eq!(
@@ -205,11 +205,11 @@ mod tests {
 
   #[test]
   fn construct_request() {
-    let mut req = Request::new(RequestMethod::GET, "/about/".to_string());
-    req.add_header("Host".to_string(), "Localhost".to_string());
+    let mut req = Request::new(RequestMethod::GET, "/about/");
+    req.add_header("Host", "Localhost");
 
     let mut expected_cont = Content::default();
-    expected_cont.add_header("Host".to_string(), "Localhost".to_string());
+    expected_cont.add_header("Host", "Localhost");
     let expected_req = Request {
       method: RequestMethod::GET,
       uri: "/about/".to_string(),

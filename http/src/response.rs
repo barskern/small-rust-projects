@@ -15,7 +15,7 @@ pub struct Response {
 }
 
 impl Response {
-  pub fn new(status_code: StatusCode, body: String) -> Response {
+  pub fn new<S: Into<String>>(status_code: StatusCode, body: S) -> Response {
     Response {
       status_code,
       content: Content::new(body),
@@ -27,13 +27,13 @@ impl Contentable for Response {
   fn get_body(&self) -> &str {
     self.content.get_body()
   }
-  fn set_body(&mut self, new_body: String) -> String {
+  fn set_body<S: Into<String>>(&mut self, new_body: S) -> String {
     self.content.set_body(new_body)
   }
   fn has_header(&self, name: &str) -> Option<&str> {
     self.content.has_header(name)
   }
-  fn add_header(&mut self, name: String, value: String) -> Option<String> {
+  fn add_header<S: Into<String>>(&mut self, name: S, value: S) -> Option<String> {
     self.content.add_header(name, value)
   }
 }
@@ -252,11 +252,11 @@ mod tests {
 
   #[test]
   fn construct_response() {
-    let res = Response::new(StatusCode::OK, "hello world".to_string());
+    let res = Response::new(StatusCode::OK, "hello world");
 
     let expected_res = Response {
       status_code: StatusCode::OK,
-      content: Content::new("hello world".to_string()),
+      content: Content::new("hello world"),
     };
 
     assert_eq!(expected_res, res);
@@ -264,7 +264,7 @@ mod tests {
 
   #[test]
   fn response_to_string() {
-    let res = Response::new(StatusCode::OK, "hello world".to_string());
+    let res = Response::new(StatusCode::OK, "hello world");
 
     let expected_str = format!("{} 200 OK\r\n\r\nhello world", HTTP_VERSION).to_string();
 
@@ -273,8 +273,8 @@ mod tests {
 
   #[test]
   fn use_headers() {
-    let mut res = Response::new(StatusCode::OK, "hello world".to_string());
-    res.add_header("Host".to_string(), "Localhost".to_string());
+    let mut res = Response::new(StatusCode::OK, "hello world");
+    res.add_header("Host", "Localhost");
 
     assert_eq!(
       Some("Localhost"),

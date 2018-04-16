@@ -16,10 +16,10 @@ pub struct Content {
 }
 
 impl Content {
-  pub fn new(body: String) -> Self {
+  pub fn new<S: Into<String>>(body: S) -> Self {
     Content {
       headers: HashMap::new(),
-      body,
+      body: body.into(),
     }
   }
 }
@@ -28,20 +28,20 @@ impl Contentable for Content {
   fn get_body(&self) -> &str {
     &self.body
   }
-  fn set_body(&mut self, new_body: String) -> String {
-    mem::replace(&mut self.body, new_body)
+  fn set_body<S: Into<String>>(&mut self, new_body: S) -> String {
+    mem::replace(&mut self.body, new_body.into())
   }
   fn has_header(&self, name: &str) -> Option<&str> {
     self.headers.get(name).map(|s| s.as_str())
   }
-  fn add_header(&mut self, name: String, value: String) -> Option<String> {
-    self.headers.insert(name, value)
+  fn add_header<S: Into<String>>(&mut self, name: S, value: S) -> Option<String> {
+    self.headers.insert(name.into(), value.into())
   }
 }
 
 impl Default for Content {
   fn default() -> Self {
-    Self::new("".to_string())
+    Self::new("")
   }
 }
 
@@ -103,12 +103,12 @@ pub trait Contentable {
   /// Gets a immutable borrow of the body of the message
   fn get_body(&self) -> &str;
   /// Sets the body to a new string and returns the old body
-  fn set_body(&mut self, new_body: String) -> String;
+  fn set_body<S: Into<String>>(&mut self, new_body: S) -> String;
   /// Checks to see if header exists and returns value of said header
   fn has_header(&self, name: &str) -> Option<&str>;
   /// Adds a header to the message. Will return "Some()" with the value of
   /// the previously defined header if overwriting.
-  fn add_header(&mut self, name: String, value: String) -> Option<String>;
+  fn add_header<S: Into<String>>(&mut self, name: S, value: S) -> Option<String>;
 }
 
 #[cfg(test)]
@@ -172,8 +172,8 @@ mod tests {
 
   #[test]
   fn use_headers() {
-    let mut cont = Content::new("hello_world".to_string());
-    cont.add_header("Host".to_string(), "Localhost".to_string());
+    let mut cont = Content::new("hello_world");
+    cont.add_header("Host", "Localhost");
 
     assert_eq!(
       Some("Localhost"),
@@ -189,8 +189,8 @@ mod tests {
 
   #[test]
   fn replace_body() {
-    let mut cont = Content::new("{\"username\": \"johnny\"}".to_string());
-    cont.add_header("Host".to_string(), "Localhost".to_string());
+    let mut cont = Content::new("{\"username\": \"johnny\"}");
+    cont.add_header("Host", "Localhost");
 
     assert_eq!(
       "{\"username\": \"johnny\"}",
@@ -198,7 +198,7 @@ mod tests {
       "Didn't give back the correct body"
     );
 
-    let old_body = cont.set_body("{\"username\": \"karl\"}".to_string());
+    let old_body = cont.set_body("{\"username\": \"karl\"}");
 
     assert_eq!(
       "{\"username\": \"johnny\"}", old_body,
